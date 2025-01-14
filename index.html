@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AR Room Viewer</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+        #ar-container {
+            width: 100vw;
+            height: 100vh;
+        }
+    </style>
+</head>
+<body>
+    <div id="ar-container"></div>
+
+    <script type="module">
+        import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.152.0/build/three.module.js";
+
+        // Initialize Three.js scene
+        const container = document.getElementById('ar-container');
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer();
+
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        container.appendChild(renderer.domElement);
+
+        // Room setup
+        const roomSize = 10; // Generic room size in units
+        const roomGeometry = new THREE.BoxGeometry(roomSize, roomSize, roomSize);
+        const roomMaterial = new THREE.MeshBasicMaterial({ color: 0x87ceeb, side: THREE.BackSide });
+        const room = new THREE.Mesh(roomGeometry, roomMaterial);
+        scene.add(room);
+
+        // Add floor
+        const floorGeometry = new THREE.PlaneGeometry(roomSize, roomSize);
+        const floorMaterial = new THREE.MeshBasicMaterial({ color: 0x228B22 });
+        const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+        floor.rotation.x = -Math.PI / 2;
+        scene.add(floor);
+
+        camera.position.set(0, 1.6, 0); // Simulate user height at room center
+
+        // Handle device orientation
+        function onDeviceOrientation(event) {
+            const alpha = THREE.MathUtils.degToRad(event.alpha || 0); // Yaw
+            const beta = THREE.MathUtils.degToRad(event.beta || 0);   // Pitch
+            const gamma = THREE.MathUtils.degToRad(event.gamma || 0); // Roll
+
+            camera.rotation.set(beta, alpha, -gamma);
+        }
+
+        // Check if device orientation is supported
+        if (window.DeviceOrientationEvent) {
+            window.addEventListener('deviceorientation', onDeviceOrientation);
+        } else {
+            alert('Device orientation is not supported on this browser/device.');
+        }
+
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+            renderer.render(scene, camera);
+        }
+
+        animate();
+
+        // Resize handler
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>
